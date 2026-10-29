@@ -24,11 +24,12 @@ app.use(helmet());
 
 // Only the exact frontend URL is allowed (no wildcard *.vercel.app)
 const allowedOrigins = [
-    process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null,
-    'http://localhost:5173',
-    'http://localhost:3000'
-].filter(Boolean);
-
+    ...(process.env.FRONTEND_URL || '')
+        .split(',')
+        .map((u) => u.trim().replace(/\/$/, ''))
+        .filter(Boolean),
+    'http://localhost:5173'
+];
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
