@@ -1,28 +1,28 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import API from '../services/api';
+import API, { getErrorMessage } from '../services/api';
 
-/// Fetch all skills (Handles response.data.skills, response.data.data, or direct array)
+/// Fetch all skills
 export const fetchSkills = createAsyncThunk(
     'skills/fetchSkill',
     async (_, { rejectWithValue }) => {
         try {
             const response = await API.get('/skills');
-            return response.data.skills ;
+            return response.data.skills;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || error.message);
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
 
-/// Post new skill
+/// Post new skill (server returns "skill", singular)
 export const postSkills = createAsyncThunk(
     'skills/createSkill',
     async (skillData, { rejectWithValue }) => {
         try {
             const response = await API.post('/skills/add', skillData);
-            return response.data.skills ;
+            return response.data.skill;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || error.message);
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
@@ -33,9 +33,9 @@ export const updateSkill = createAsyncThunk(
     async ({ id, skillData }, { rejectWithValue }) => {
         try {
             const response = await API.put(`/skills/${id}`, skillData);
-            return response.data.skills ;
+            return response.data.skill;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || error.message);
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
@@ -47,12 +47,11 @@ export const deleteSkill = createAsyncThunk(
             await API.delete(`/skills/delete/${id}`);
             return id;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || error.message);
+            return rejectWithValue(getErrorMessage(error));
         }
     }
 );
 
-/// Skill slice reducer 
 const SkillSlice = createSlice({
     name: 'Skills',
     initialState: {
@@ -77,9 +76,9 @@ const SkillSlice = createSlice({
             state.isModalOpen = true;
             state.editId = action.payload._id || action.payload.id;
             state.skill = {
-                name: action.payload.name || action.payload.title || '',
-                category: action.payload.category || action.payload.type || '',
-                proficiency: action.payload.proficiency || action.payload.level || 85,
+                name: action.payload.name || '',
+                category: action.payload.category || '',
+                proficiency: action.payload.proficiency ?? 85,
             };
         },
         CloseModal: (state) => {
@@ -92,48 +91,59 @@ const SkillSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            /// Fetch
+            // Fetch
             .addCase(fetchSkills.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchSkills.fulfilled, (state, action) => {
                 state.loading = false;
-                // Ensures skills is always an array
                 state.skills = Array.isArray(action.payload) ? action.payload : [];
             })
             .addCase(fetchSkills.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Create 
+            // Create
+            .addCase(postSkills.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(postSkills.fulfilled, (state, action) => {
                 state.loading = false;
-                const newSkill = action.payload;
-                if (Array.isArray(state.skills)) {
-                    state.skills.push(newSkill);
-                } else {
-                    state.skills = [newSkill];
-                }
+                if (action.payload) state.skills.unshift(action.payload);
                 state.isModalOpen = false;
             })
+            .addCase(postSkills.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             // Update
+            .addCase(updateSkill.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(updateSkill.fulfilled, (state, action) => {
                 state.loading = false;
                 const updatedSkill = action.payload;
-                const index = state.skills.findIndex(
-                    p => (p._id || p.id) === (updatedSkill._id || updatedSkill.id)
-                );
-                if (index !== -1) {
-                    state.skills[index] = updatedSkill;
+                if (updatedSkill) {
+                    const index = state.skills.findIndex(
+                        p => (p._id || p.id) === (updatedSkill._id || updatedSkill.id)
+                    );
+                    if (index !== -1) state.skills[index] = updatedSkill;
                 }
                 state.isModalOpen = false;
             })
+            .addCase(updateSkill.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             // Delete
             .addCase(deleteSkill.fulfilled, (state, action) => {
-                state.loading = false;
-                const deletedId = action.payload;
-                state.skills = state.skills.filter(p => (p._id || p.id) !== deletedId);
+                state.skills = state.skills.filter(p => (p._id || p.id) !== action.payload);
+            })
+            .addCase(deleteSkill.rejected, (state, action) => {
+                state.error = action.payload;
             });
     }
 });

@@ -1,13 +1,12 @@
 const Experience = require('../models/experienceModel');
 
-// 1. (Create)
 const createExperience = async (req, res, next) => {
     try {
         const experience = new Experience(req.body);
         await experience.save();
-        res.status(201).json({ 
+        res.status(201).json({
             success: true,
-            message: 'Experience added successfully', 
+            message: 'Experience added successfully',
             experience
         });
     } catch (e) {
@@ -17,7 +16,7 @@ const createExperience = async (req, res, next) => {
 
 const getExperience = async (req, res, next) => {
     try {
-        const experiences = await Experience.find();
+        const experiences = await Experience.find().sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             experiences
@@ -29,19 +28,17 @@ const getExperience = async (req, res, next) => {
 
 const updateExperience = async (req, res, next) => {
     try {
-        const exp = await Experience.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-        
-        if (!exp) {
-            return res.status(404).json({
-                success: false,
-                message: 'Experience not found'
-            });
+        const experience = await Experience.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+        if (!experience) {
+            return res.status(404).json({ success: false, message: 'Experience not found' });
         }
-        
+
+        // The client reads "experience", so use the same key as create
         res.status(200).json({
             success: true,
             message: 'Experience is updated',
-            exp
+            experience
         });
     } catch (e) {
         next(e);
@@ -51,18 +48,12 @@ const updateExperience = async (req, res, next) => {
 const deleteExperience = async (req, res, next) => {
     try {
         const exp = await Experience.findByIdAndDelete(req.params.id);
-        
+
         if (!exp) {
-            return res.status(404).json({
-                success: false,
-                message: 'Experience not found'
-            }); 
+            return res.status(404).json({ success: false, message: 'Experience not found' });
         }
-        
-        res.status(200).json({
-            success: true,
-            message: 'Experience is deleted'
-        });
+
+        res.status(200).json({ success: true, message: 'Experience is deleted' });
     } catch (e) {
         next(e);
     }

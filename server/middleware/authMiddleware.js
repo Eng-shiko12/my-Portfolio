@@ -1,29 +1,30 @@
-const Admin = require("../models/adminModel");
-const jwt = require("jsonwebtoken");
+const Admin = require('../models/adminModel');
+const jwt = require('jsonwebtoken');
 
 const Auth = async (req, res, next) => {
     try {
-        const authHeader = req.header("Authorization");
+        const authHeader = req.header('Authorization');
         if (!authHeader) {
-            return res.status(401).json({ error: "Authentication required" });
+            return res.status(401).json({ success: false, error: 'Authentication required' });
         }
-        
-        const token = authHeader.replace("Bearer", "").trim();
-        const decode = jwt.verify(token, process.env.JWT_SECRET);
-        
-        const admin = await Admin.findOne({ _id: decode.id, tokens: token });
-        
-        // تم إضافة return هنا لإيقاف التنفيذ فوراً إذا لم يتم العثور على الأدمن
+
+        const token = authHeader.replace('Bearer', '').trim();
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const admin = await Admin.findOne({ _id: decoded.id, tokens: token });
         if (!admin) {
-            return res.status(404).json({ error: "This Admin not found" });
+            return res.status(401).json({ success: false, error: 'Session is no longer valid' });
         }
-        
+
         req.admin = admin;
         req.token = token;
         next();
     } catch (e) {
-        // تم تعديلها إلى e.message لضمان ظهور رسالة الخطأ بوضوح
-        res.status(500).json({ error: e.message });
+        // Invalid or expired token is a 401, not a server error
+        if (e.name === 'JsonWebTokenError' || e.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+        }
+        next(e);
     }
 };
 

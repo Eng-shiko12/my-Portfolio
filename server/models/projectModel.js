@@ -16,17 +16,19 @@ const ProjectSchema = new mongoose.Schema({
     },
     technology: {
         type: [String],
-        required: true
+        default: []
     },
     githubUrl: {
         type: String,
-        required: true
+        required: false,
+        default: ''
     },
     liveUrl: {
         type: String,
-        required: true
+        required: false,
+        default: ''
     }
-}, { 
+}, {
     timestamps: true
 });
 
