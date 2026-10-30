@@ -2,8 +2,8 @@
 
 A full-stack personal portfolio with a public website and a private admin dashboard. Everything on the public site (bio, projects, skills, experience) is managed from the dashboard, so no code changes are needed to update content.
 
-**Live demo:** `https://your-portfolio.vercel.app`
-**API:** `https://your-api.vercel.app`
+**Live demo:** `https://shaban-aboelkair.vercel.app`
+**API:** `https://my-portfolio-server-84bcbctjd-shiko6.vercel.app`
 
 <!-- Add screenshots here -->
 <!-- ![Home page](./docs/home.png) -->
@@ -88,41 +88,6 @@ my-portfolio/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/<your-username>/my-portfolio.git
-cd my-portfolio
-
-# backend
-npm install
-
-# frontend
-cd client
-npm install
-```
-
-### 2. Environment variables
-
-Create `.env` in the project root:
-
-```env
-PORT=5000
-NODE_ENV=development
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster>/<db>
-JWT_SECRET=use-a-long-random-string
-FRONTEND_URL=http://localhost:5173
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-EMAIL_USER=you@gmail.com
-EMAIL_PASS=your_gmail_app_password
-```
-
-Create `client/.env`:
-
-```env
-VITE_API_URL=http://localhost:5000
-```
 
 ### 3. Run
 
